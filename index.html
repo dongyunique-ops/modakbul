@@ -146,6 +146,8 @@ header p{margin-top:6px;font-size:14px;color:#888}
   <h1 onclick="tryAdmin()" style="cursor:pointer">🔥 모닥불타임</h1>
   <p id="headerSub">리허설 날짜 투표 & O/X 퀴즈</p>
 </header>
+<audio id="bgm" src="bgm.mp3" loop preload="auto" style="display:none"></audio>
+<audio id="bgm_ox" src="bgm_ox.mp3" loop preload="auto" style="display:none"></audio>
 
 <!-- ===== 참여자 화면 ===== -->
 <div id="participantView">
@@ -224,11 +226,9 @@ header p{margin-top:6px;font-size:14px;color:#888}
     <div class="ox-btns">
       <div class="ox-btn" id="btnO" onclick="pickOX('O')">
         <div class="icon">⭕</div>
-        <div class="label">맞다</div>
       </div>
       <div class="ox-btn" id="btnX" onclick="pickOX('X')">
         <div class="icon">❌</div>
-        <div class="label">아니다</div>
       </div>
     </div>
     <div class="ox-done hidden" id="oxDone">
@@ -296,9 +296,9 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const QUESTIONS = [
   '사내 연애가 가능하다고 생각하시는 분?',
-  '나는 배민보다 쿠팡이츠 배달이 더 낫다고 생각한다',
-  '계속 되는 경쟁 대응에 지쳤다',
-  '배민클럽 사실 아직도 가입 안 했다.'
+  '배민보다 쿠팡이츠 배달이 더 낫다고 생각하시는 분?',
+  "내가 배민에서 '대체 불가능한 인재'라고 생각하시는 분?",
+  '배민클럽 사실 아직도 가입 안하신 분?'
 ];
 const DATE_LABELS = ['6월 24일 수요일', '6월 25일 목요일', '6월 26일 금요일'];
 const ADMIN_PW = '1234';
@@ -356,6 +356,9 @@ function showStep(id) {
   ['s1','s2','s3','s4','s5','s6','s7','s8'].forEach(s =>
     document.getElementById(s).classList.toggle('hidden', s !== id)
   );
+  if (['s1','s2','s3','s4'].includes(id)) { stopOXBGM(); playBGM(); }
+  else if (['s5','s6','s8'].includes(id)) { stopBGM(); playOXBGM(); }
+  else { stopBGM(); stopOXBGM(); }
 }
 
 // ── S1 이름 ──
@@ -718,6 +721,14 @@ function subscribeAll() {
       if (isAdmin) { updateAdminBar(); renderAdminOX(); return; }
       routeParticipant();
     })
+    .on('postgres_changes',{event:'DELETE',schema:'public',table:'votes'}, async () => {
+      await loadVotes();
+      if (isAdmin) return;
+      user = null;
+      localStorage.removeItem('rv_user');
+      showStep('s1');
+      document.getElementById('nameInput').value = '';
+    })
     .on('postgres_changes',{event:'*',schema:'public',table:'ox_answers'}, async () => {
       await loadOXAnswers();
       if (isAdmin) { renderAdminOX(); return; }
@@ -725,6 +736,26 @@ function subscribeAll() {
       if (appState && appState.phase==='ox_result') renderOXResult();
     })
     .subscribe();
+}
+
+// BGM 제어
+function playBGM() {
+  const bgm = document.getElementById('bgm');
+  if (bgm) { bgm.volume = 0.4; bgm.play().catch(()=>{}); }
+}
+function stopBGM() {
+  const bgm = document.getElementById('bgm');
+  if (bgm) { bgm.pause(); bgm.currentTime = 0; }
+}
+function playOXBGM() {
+  const bgm = document.getElementById('bgm');
+  if (bgm) { bgm.pause(); }
+  const ox = document.getElementById('bgm_ox');
+  if (ox) { ox.volume = 0.4; ox.play().catch(()=>{}); }
+}
+function stopOXBGM() {
+  const ox = document.getElementById('bgm_ox');
+  if (ox) { ox.pause(); ox.currentTime = 0; }
 }
 
 document.getElementById('nameInput').addEventListener('keydown', e => { if(e.key==='Enter') goS2(); });
