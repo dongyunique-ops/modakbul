@@ -83,8 +83,8 @@ header p{margin-top:6px;font-size:14px;color:#888}
 .q-text{font-size:20px;font-weight:700;line-height:1.5;margin-bottom:32px;word-break:keep-all}
 .ox-btns{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .ox-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a1a1a;border:0.5px solid rgba(255,255,255,0.14);border-radius:16px;padding:32px 20px;cursor:pointer;transition:all 0.15s;gap:10px}
-.ox-btn.picked-o{background:rgba(29,118,200,0.2);border-color:#3a8fd4;pointer-events:none}
-.ox-btn.picked-x{background:rgba(200,60,60,0.2);border-color:#d45a5a;pointer-events:none}
+.ox-btn.picked-o{background:rgba(29,118,200,0.2);border-color:#3a8fd4}
+.ox-btn.picked-x{background:rgba(200,60,60,0.2);border-color:#d45a5a}
 .ox-btn .icon{font-size:52px;line-height:1}
 .ox-btn .label{font-size:15px;font-weight:600;color:#888}
 .ox-btn.picked-o .label{color:#5DAADC}
@@ -298,7 +298,7 @@ const QUESTIONS = [
   '사내 연애가 가능하다고 생각하시는 분?',
   '나는 배민보다 쿠팡이츠 배달이 더 낫다고 생각한다',
   '계속 되는 경쟁 대응에 지쳤다',
-  '배민클럽 사실 아직도 가입 안 하신분?'
+  '배민클럽 사실 아직도 가입 안 했다.'
 ];
 const DATE_LABELS = ['6월 24일 수요일', '6월 25일 목요일', '6월 26일 금요일'];
 const ADMIN_PW = '1234';
@@ -505,7 +505,6 @@ async function pickOX(ans) {
   if (!user || !appState || appState.phase !== 'ox_question') return;
   const qi = appState.currentQ;
   const key = 'q'+qi;
-  if (allOX[user] && allOX[user][key]) return;
   const existing = allOX[user] || {};
   const newData = {...existing, name: user, [key]: ans};
   const {error} = await sb.from('ox_answers').upsert(newData, {onConflict:'name'});
@@ -654,6 +653,8 @@ async function adminReset() {
   await sb.from('ox_state').delete().eq('id',1);
   await sb.from('votes').delete().neq('name','');
   appState = null; allVotes = {}; allOX = {};
+  user = null;
+  localStorage.removeItem('rv_user');
   updateAdminBar();
   renderAdminDate();
   renderAdminOX();
