@@ -344,6 +344,7 @@ function routeParticipant() {
 
 function showAdmin() {
   isAdmin = true;
+  document.title = '🔥 모닥불타임 (관리자모드)';
   document.getElementById('participantView').classList.add('hidden');
   document.getElementById('adminView').classList.remove('hidden');
   renderAdminDate();
@@ -661,6 +662,7 @@ async function adminReset() {
 
 function exitAdmin() {
   isAdmin = false;
+  document.title = '🔥 모닥불타임';
   localStorage.removeItem('rv_admin');
   document.getElementById('adminView').classList.add('hidden');
   document.getElementById('participantView').classList.remove('hidden');
